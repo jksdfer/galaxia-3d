@@ -36,6 +36,9 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:15px;heigh
 </style>
 </head>
 <body>
+<div style="position:fixed;width:200px;height:113px;bottom:-120px;left:-120px;z-index:-1;overflow:hidden;">
+<iframe id="ytFrame" width="200" height="113" src="" frameborder="0" allow="autoplay" style="pointer-events:none;"></iframe>
+</div>
 <div id="webgl-container"></div>
 <div id="crosshair"></div>
 
@@ -238,13 +241,11 @@ composer.render();}
 
 <!-- Music controls (global scope for YouTube) -->
 <script>
-var bgAudio=null;
 function startMusic(){
-if(!bgAudio){bgAudio=document.getElementById('bgMusic');}
-bgAudio.play().catch(function(e){console.log('Need user interaction');});
+document.getElementById('ytFrame').src='https://www.youtube.com/embed/63pTpAAF0HM?autoplay=1&start=0&loop=1&playlist=63pTpAAF0HM&controls=0&mute=0';
 }
 function stopMusic(){
-if(bgAudio)bgAudio.pause();
+document.getElementById('ytFrame').src='';
 }
 </script>
 </body>
