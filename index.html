@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+<title>Galaxia 3D Interactiva</title>
+<style>
+:root{--neon-blue:#00f3ff;--neon-magenta:#ff00ea;--glass-bg:rgba(10,15,30,.6);--glass-border:rgba(255,255,255,.1)}
+body{margin:0;padding:0;overflow:hidden;background:#000;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;color:#fff;user-select:none;-webkit-user-select:none}
+#webgl-container{position:absolute;top:0;left:0;width:100vw;height:100vh;z-index:1}
+#ui-layer{position:absolute;top:0;left:0;width:100%;height:100%;z-index:10;pointer-events:none;display:flex;flex-direction:column;justify-content:space-between;padding:20px;box-sizing:border-box}
+.interactive{pointer-events:auto}
+.glass-panel{background:var(--glass-bg);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid var(--glass-border);border-radius:8px;padding:15px;box-shadow:0 4px 30px rgba(0,0,0,.5)}
+.top-controls{display:flex;justify-content:space-between;align-items:flex-start}
+.btn{background:transparent;color:var(--neon-blue);border:1px solid var(--neon-blue);padding:10px 20px;border-radius:4px;font-size:14px;cursor:pointer;transition:all .3s ease;text-transform:uppercase;letter-spacing:2px;text-shadow:0 0 5px var(--neon-blue);box-shadow:inset 0 0 10px rgba(0,243,255,.2);margin-bottom:10px;display:block;width:100%}
+.btn:hover{background:var(--neon-blue);color:#000;box-shadow:0 0 20px var(--neon-blue)}
+.btn-magenta{color:var(--neon-magenta);border-color:var(--neon-magenta);text-shadow:0 0 5px var(--neon-magenta);box-shadow:inset 0 0 10px rgba(255,0,234,.2)}
+.btn-magenta:hover{background:var(--neon-magenta);color:#000;box-shadow:0 0 20px var(--neon-magenta)}
+#btn-music{color:#ffd700;border-color:#ffd700;text-shadow:0 0 5px #ffd700;box-shadow:inset 0 0 10px rgba(255,215,0,.2)}
+#btn-music:hover{background:#ffd700;color:#000;box-shadow:0 0 20px #ffd700}
+#star-info{position:absolute;right:-350px;top:20px;width:280px;transition:right .5s cubic-bezier(.175,.885,.32,1.275)}
+#star-info.active{right:20px}
+#star-info h2{margin:0 0 15px;font-weight:300;color:var(--neon-magenta);border-bottom:1px solid var(--glass-border);padding-bottom:10px;font-size:22px}
+.stat{display:flex;justify-content:space-between;margin-bottom:8px;font-size:13px;letter-spacing:1px}
+.stat-value{color:var(--neon-blue);font-weight:bold}
+.bottom-controls{display:flex;gap:20px;align-items:center}
+.slider-container{display:flex;flex-direction:column;gap:5px;font-size:11px;text-transform:uppercase;letter-spacing:1px}
+input[type=range]{-webkit-appearance:none;width:150px;background:rgba(255,255,255,.1);height:4px;border-radius:2px;outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:15px;height:15px;border-radius:50%;background:var(--neon-blue);cursor:pointer;box-shadow:0 0 10px var(--neon-blue)}
+#crosshair{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:20px;height:20px;border:1px solid rgba(255,255,255,.3);border-radius:50%;pointer-events:none;transition:all .3s ease}
+#crosshair::before{content:'';position:absolute;top:9px;left:-5px;width:30px;height:1px;background:rgba(255,255,255,.3)}
+#crosshair::after{content:'';position:absolute;top:-5px;left:9px;width:1px;height:30px;background:rgba(255,255,255,.3)}
+#crosshair.target-locked{border-color:var(--neon-magenta);transform:translate(-50%,-50%) scale(1.5)}
+#crosshair.target-locked::before,#crosshair.target-locked::after{background:var(--neon-magenta)}
+@media(max-width:768px){#star-info{width:240px}.bottom-controls{flex-direction:column;align-items:flex-start}.btn{font-size:12px;padding:8px 15px}}
+</style>
+</head>
+<body>
+<div id="webgl-container"></div>
+<div id="crosshair"></div>
+
+<audio id="bgMusic" loop preload="auto">
+<source src="music.mp4" type="video/mp4">
+</audio>
+
+<div id="ui-layer">
+<div class="top-controls">
+<div class="glass-panel interactive" style="width:190px;">
+<button class="btn" id="btn-explore">Explorar Galaxia</button>
+<button class="btn" id="btn-rotate">Rotación: ON</button>
+<button class="btn" id="btn-music">🎵 Música: OFF</button>
+<button class="btn" id="btn-fullscreen">Pantalla Completa</button>
+</div>
+</div>
+
+<div id="star-info" class="glass-panel interactive">
+<h2 id="star-name">SYS-X99</h2>
+<div class="stat"><span>Clase:</span><span class="stat-value" id="star-class">Supergigante Azul</span></div>
+<div class="stat"><span>Distancia:</span><span class="stat-value" id="star-dist">15,000 AL</span></div>
+<div class="stat"><span>Temperatura:</span><span class="stat-value" id="star-temp">25,000 K</span></div>
+<div class="stat"><span>Radio:</span><span class="stat-value" id="star-size">45 R☉</span></div>
+<button class="btn btn-magenta" id="btn-return" style="margin-top:12px;">Regresar a Órbita</button>
+</div>
+
+<div class="bottom-controls">
+<div class="glass-panel interactive slider-container">
+<label for="speed-slider">Velocidad del Tiempo</label>
+<input type="range" id="speed-slider" min="0" max="2" step=".1" value=".5">
+</div>
+</div>
+</div>
+
+<script type="importmap">
+{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js","three/addons/":"https://unpkg.com/three@0.160.0/examples/jsm/","@tweenjs/tween.js":"https://unpkg.com/@tweenjs/tween.js@23.1.1/dist/tween.esm.js"}}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+import {EffectComposer} from 'three/addons/postprocessing/EffectComposer.js';
+import {RenderPass} from 'three/addons/postprocessing/RenderPass.js';
+import {UnrealBloomPass} from 'three/addons/postprocessing/UnrealBloomPass.js';
+import * as TWEEN from '@tweenjs/tween.js';
+
+let scene,camera,renderer,composer,controls;
+let galaxy,blackHole,accretionDisk,shootingStars=[];
+let raycaster,mouse,isFocusedOnStar=false,musicOn=false;
+
+const params={count:/Android|iPhone|iPad/i.test(navigator.userAgent)?20000:45000,size:.05,radius:25,branches:4,spin:1,randomness:.5,randomnessPower:3,insideColor:'#ff00aa',outsideColor:'#0066ff',timeSpeed:.5,autoRotate:true};
+const originalCameraPos=new THREE.Vector3(0,15,30);
+const clock=new THREE.Clock();
+
+// Music control - communicates with global function
+let musicStarted=false;
+document.body.addEventListener('click',function(e){
+if(!musicStarted && e.target.tagName!=='BUTTON' && e.target.tagName!=='INPUT'){
+musicStarted=true;musicOn=true;
+window.startMusic();
+document.getElementById('btn-music').textContent='🎵 Música: ON';
+}});
+
+document.getElementById('btn-music').addEventListener('click',function(){
+if(musicOn){musicOn=false;window.stopMusic();this.textContent='🎵 Música: OFF';}
+else{musicOn=true;window.startMusic();this.textContent='🎵 Música: ON';}});
+
+init();animate();
+
+function init(){
+scene=new THREE.Scene();
+scene.fog=new THREE.FogExp2(0x000000,.015);
+camera=new THREE.PerspectiveCamera(60,innerWidth/innerHeight,.1,1000);
+camera.position.copy(originalCameraPos);
+renderer=new THREE.WebGLRenderer({antialias:false,powerPreference:"high-performance"});
+renderer.setSize(innerWidth,innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+document.getElementById('webgl-container').appendChild(renderer.domElement);
+const renderScene=new RenderPass(scene,camera);
+const bloomPass=new UnrealBloomPass(new THREE.Vector2(innerWidth,innerHeight),2,.5,.1);
+composer=new EffectComposer(renderer);
+composer.addPass(renderScene);composer.addPass(bloomPass);
+controls=new OrbitControls(camera,renderer.domElement);
+controls.enableDamping=true;controls.dampingFactor=.05;
+controls.maxDistance=60;controls.minDistance=2;
+controls.autoRotate=params.autoRotate;controls.autoRotateSpeed=.5;
+generateGalaxy();createBlackHole();createDust();
+raycaster=new THREE.Raycaster();raycaster.params.Points.threshold=.3;
+mouse=new THREE.Vector2();
+addEventListener('resize',onWindowResize);
+addEventListener('click',onClick);
+addEventListener('touchstart',onTouch,{passive:false});
+addEventListener('mousemove',onMouseMove);
+setupUI();
+setInterval(()=>{if(shootingStars.length<3)spawnShootingStar();},4000+Math.random()*4000);}
+
+function onWindowResize(){camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);composer.setSize(innerWidth,innerHeight);}
+function onMouseMove(e){mouse.x=(e.clientX/innerWidth)*2-1;mouse.y=-(e.clientY/innerHeight)*2+1;}
+
+function generateGalaxy(){
+if(galaxy!==undefined){scene.remove(galaxy);galaxy.geometry.dispose();galaxy.material.dispose();}
+const geometry=new THREE.BufferGeometry();
+const positions=new Float32Array(params.count*3);
+const colors=new Float32Array(params.count*3);
+const sizes=new Float32Array(params.count);
+const cInside=new THREE.Color(params.insideColor);
+const cOutside=new THREE.Color(params.outsideColor);
+for(let i=0;i<params.count;i++){
+const i3=i*3,radius=Math.random()*params.radius,spinAngle=radius*params.spin,branchAngle=((i%params.branches)/params.branches)*Math.PI*2;
+positions[i3]=Math.cos(branchAngle+spinAngle)*radius+Math.pow(Math.random(),params.randomnessPower)*(Math.random()<.5?1:-1)*params.randomness*radius;
+positions[i3+1]=Math.pow(Math.random(),params.randomnessPower)*(Math.random()<.5?1:-1)*params.randomness*radius*.2;
+positions[i3+2]=Math.sin(branchAngle+spinAngle)*radius+Math.pow(Math.random(),params.randomnessPower)*(Math.random()<.5?1:-1)*params.randomness*radius;
+const mc=cInside.clone();mc.lerp(cOutside,radius/params.radius);
+if(Math.random()>.95)mc.setHex(0xffffff);if(Math.random()>.98)mc.setHex(0xffd700);
+colors[i3]=mc.r;colors[i3+1]=mc.g;colors[i3+2]=mc.b;sizes[i]=Math.random()*1.5;}
+geometry.setAttribute('position',new THREE.BufferAttribute(positions,3));
+geometry.setAttribute('color',new THREE.BufferAttribute(colors,3));
+geometry.setAttribute('aSize',new THREE.BufferAttribute(sizes,1));
+const material=new THREE.PointsMaterial({size:params.size,sizeAttenuation:true,depthWrite:false,blending:THREE.AdditiveBlending,vertexColors:true,transparent:true,opacity:.9});
+material.onBeforeCompile=(shader)=>{shader.fragmentShader=shader.fragmentShader.replace(
+'gl_FragColor = vec4( diffuse, opacity );',
+`
+float distanceToCenter = distance(gl_PointCoord, vec2(0.5));
+float strength = 0.05 / distanceToCenter - 0.1;
+gl_FragColor = vec4(diffuse, strength * opacity);
+`);};
+galaxy=new THREE.Points(geometry,material);scene.add(galaxy);}
+
+function createBlackHole(){
+blackHole=new THREE.Mesh(new THREE.SphereGeometry(1.5,32,32),new THREE.MeshBasicMaterial({color:0x000000}));
+scene.add(blackHole);
+accretionDisk=new THREE.Mesh(new THREE.RingGeometry(1.8,4,64),
+new THREE.MeshBasicMaterial({color:0xffaa00,side:THREE.DoubleSide,transparent:true,opacity:.6,blending:THREE.AdditiveBlending}));
+accretionDisk.rotation.x=Math.PI/2+.1;scene.add(accretionDisk);}
+
+function createDust(){
+const dustGeo=new THREE.BufferGeometry();
+const dustPos=new Float32Array(1500);
+for(let i=0;i<1500;i++)dustPos[i]=(Math.random()-.5)*60;
+dustGeo.setAttribute('position',new THREE.BufferAttribute(dustPos,3));
+const dustMat=new THREE.PointsMaterial({size:2,color:0x220055,transparent:true,opacity:.1,blending:THREE.AdditiveBlending,depthWrite:false});
+scene.add(new THREE.Points(dustGeo,dustMat));}
+
+function spawnShootingStar(){
+if(shootingStars.length>3)return;
+const mat=new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:1});
+const geo=new THREE.SphereGeometry(.05,4,4);
+const star=new THREE.Mesh(geo,mat);
+star.position.set((Math.random()-.5)*40,(Math.random()-.5)*10,(Math.random()-.5)*40);
+scene.add(star);shootingStars.push(star);
+const target=new THREE.Vector3(star.position.x+(Math.random()-.5)*20,star.position.y-5-Math.random()*5,star.position.z+(Math.random()-.5)*20);
+new TWEEN.Tween(star.position).to(target,1000+Math.random()*1000).easing(TWEEN.Easing.Quadratic.Out)
+.onComplete(()=>{scene.remove(star);shootingStars=shootingStars.filter(s=>s!==star);}).start();}
+
+function onClick(e){if(e.target.tagName==='BUTTON'||e.target.tagName==='INPUT')return;handleInteraction(e.clientX,e.clientY);}
+function onTouch(e){if(e.target.tagName==='BUTTON'||e.target.tagName==='INPUT')return;handleInteraction(e.touches[0].clientX,e.touches[0].clientY);}
+
+function handleInteraction(cx,cy){
+if(isFocusedOnStar)return;
+mouse.x=(cx/innerWidth)*2-1;mouse.y=-(cy/innerHeight)*2+1;
+raycaster.setFromCamera(mouse,camera);
+const hits=raycaster.intersectObject(galaxy);
+if(hits.length>0){
+isFocusedOnStar=true;
+const pt=hits[0].point;
+controls.target.copy(pt);
+const dist=camera.position.distanceTo(pt);
+new TWEEN.Tween(camera.position).to({x:pt.x+dist*.3,y:pt.y+dist*.2,z:pt.z+dist*.3},1500).easing(TWEEN.Easing.Cubic.InOut).start();
+const classes=['Supergigante Azul','Gigante Roja','Enana Blanca','Estrella de Neutrones'];
+const names=['SYS-X'+Math.floor(Math.random()*999),'KEPLER-'+Math.floor(Math.random()*999),'GLIESE-'+Math.floor(Math.random()*999)];
+document.getElementById('star-name').textContent=names[Math.floor(Math.random()*names.length)];
+document.getElementById('star-class').textContent=classes[Math.floor(Math.random()*classes.length)];
+document.getElementById('star-dist').textContent=Math.floor(Math.random()*50000)+',000 AL';
+document.getElementById('star-temp').textContent=Math.floor(Math.random()*40000)+' K';
+document.getElementById('star-size').textContent=Math.floor(Math.random()*80)+' R☉';
+document.getElementById('star-info').classList.add('active');
+document.getElementById('crosshair').classList.add('target-locked');}}
+
+function setupUI(){
+document.getElementById('btn-explore').addEventListener('click',resetView);
+document.getElementById('btn-return').addEventListener('click',resetView);
+document.getElementById('btn-rotate').addEventListener('click',function(){controls.autoRotate=!controls.autoRotate;this.textContent='Rotación: '+(controls.autoRotate?'ON':'OFF');});
+document.getElementById('btn-fullscreen').addEventListener('click',()=>{!document.fullscreenElement?document.documentElement.requestFullscreen():document.exitFullscreen();});
+document.getElementById('speed-slider').addEventListener('input',function(){controls.autoRotateSpeed=parseFloat(this.value)*2;});}
+
+function resetView(){
+isFocusedOnStar=false;
+new TWEEN.Tween(camera.position).to({x:originalCameraPos.x,y:originalCameraPos.y,z:originalCameraPos.z},1500).easing(TWEEN.Easing.Cubic.InOut).start();
+new TWEEN.Tween(controls.target).to({x:0,y:0,z:0},1500).start();
+document.getElementById('star-info').classList.remove('active');
+document.getElementById('crosshair').classList.remove('target-locked');}
+
+function animate(){
+requestAnimationFrame(animate);
+TWEEN.update();controls.update();
+if(galaxy)galaxy.rotation.y+=clock.getDelta()*params.timeSpeed*.1;
+if(accretionDisk)accretionDisk.rotation.z+=.02;
+composer.render();}
+</script>
+
+<!-- Music controls (global scope for YouTube) -->
+<script>
+var bgAudio=null;
+function startMusic(){
+if(!bgAudio){bgAudio=document.getElementById('bgMusic');}
+bgAudio.play().catch(function(e){console.log('Need user interaction');});
+}
+function stopMusic(){
+if(bgAudio)bgAudio.pause();
+}
+</script>
+</body>
+</html>
