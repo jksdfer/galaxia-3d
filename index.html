@@ -39,6 +39,10 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:15px;heigh
 .love-heart{position:absolute;color:#e91e63;font-size:var(--sz);text-shadow:0 0 15px #e91e63,0 0 30px #ff6ec7;animation:heartFloat var(--dur) linear infinite;opacity:.7}
 @keyframes loveFloat{0%{transform:translateY(110vh) rotate(0deg);opacity:0}10%{opacity:.8}90%{opacity:.8}100%{transform:translateY(-10vh) rotate(360deg);opacity:0}}
 @keyframes heartFloat{0%{transform:translateY(110vh) rotate(-15deg) scale(.8);opacity:0}10%{opacity:.7}90%{opacity:.7}100%{transform:translateY(-10vh) rotate(15deg) scale(1.2);opacity:0}}
+
+#photo-frame{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:9;pointer-events:none;animation:photoGlow 3s ease-in-out infinite alternate}
+#photo-frame img{width:220px;height:220px;object-fit:cover;border-radius:50%;border:3px solid rgba(255,110,199,.6);box-shadow:0 0 30px rgba(255,110,199,.4),0 0 60px rgba(124,77,255,.2)}
+@keyframes photoGlow{from{filter:drop-shadow(0 0 15px rgba(255,110,199,.4))}to{filter:drop-shadow(0 0 30px rgba(179,136,255,.6))}}
 </style>
 </head>
 <body>
@@ -50,6 +54,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:15px;heigh
 
 
 
+<div id="photo-frame"><img src="foto.jpg" alt="Foto"></div>
 <div id="love-overlay"></div>
 <div id="ui-layer">
 <div class="top-controls">
