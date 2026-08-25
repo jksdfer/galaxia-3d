@@ -33,6 +33,12 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:15px;heigh
 #crosshair.target-locked{border-color:var(--neon-magenta);transform:translate(-50%,-50%) scale(1.5)}
 #crosshair.target-locked::before,#crosshair.target-locked::after{background:var(--neon-magenta)}
 @media(max-width:768px){#star-info{width:240px}.bottom-controls{flex-direction:column;align-items:flex-start}.btn{font-size:12px;padding:8px 15px}}
+
+#love-overlay{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:8;overflow:hidden}
+.love-text{position:absolute;color:#ff6ec7;font-size:20px;font-weight:bold;text-shadow:0 0 15px #ff6ec7,0 0 30px #b388ff,0 0 50px #7c4dff;animation:loveFloat var(--dur) linear infinite;opacity:.8;white-space:nowrap}
+.love-heart{position:absolute;color:#e91e63;font-size:var(--sz);text-shadow:0 0 15px #e91e63,0 0 30px #ff6ec7;animation:heartFloat var(--dur) linear infinite;opacity:.7}
+@keyframes loveFloat{0%{transform:translateY(110vh) rotate(0deg);opacity:0}10%{opacity:.8}90%{opacity:.8}100%{transform:translateY(-10vh) rotate(360deg);opacity:0}}
+@keyframes heartFloat{0%{transform:translateY(110vh) rotate(-15deg) scale(.8);opacity:0}10%{opacity:.7}90%{opacity:.7}100%{transform:translateY(-10vh) rotate(15deg) scale(1.2);opacity:0}}
 </style>
 </head>
 <body>
@@ -44,6 +50,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:15px;heigh
 
 
 
+<div id="love-overlay"></div>
 <div id="ui-layer">
 <div class="top-controls">
 <div class="glass-panel interactive" style="width:190px;">
@@ -103,6 +110,30 @@ document.getElementById('btn-music').textContent='🎵 Música: ON';
 document.getElementById('btn-music').addEventListener('click',function(){
 if(musicOn){musicOn=false;window.stopMusic();this.textContent='🎵 Música: OFF';}
 else{musicOn=true;window.startMusic();this.textContent='🎵 Música: ON';}});
+
+
+// Love hearts floating around
+(function(){
+var overlay=document.getElementById('love-overlay');
+var words=['Love','💕','Love','❤️','Love','💜','Love','♥️','Te Amo','💕'];
+var colors=['#ff6ec7','#e91e63','#ff80ab','#b388ff','#f48fb1','#ce93d8'];
+function createItem(){
+var el=document.createElement('div');
+if(Math.random()>.4){
+el.className='love-text';el.textContent=words[Math.floor(Math.random()*words.length)];
+el.style.setProperty('--dur',(8+Math.random()*12)+'s');
+}else{
+el.className='love-heart';el.textContent='❤️';
+el.style.setProperty('--dur',(6+Math.random()*10)+'s');
+el.style.setProperty('--sz',(14+Math.random()*24)+'px');}
+el.style.left=Math.random()*90+'%';
+el.style.animationDelay=(-Math.random()*15)+'s';
+el.style.color=colors[Math.floor(Math.random()*colors.length)];
+overlay.appendChild(el);
+}
+for(var i=0;i<20;i++)createItem();
+setInterval(createItem,3000);
+})();
 
 init();animate();
 
