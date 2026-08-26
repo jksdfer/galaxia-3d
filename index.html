@@ -118,37 +118,47 @@ if(musicOn){musicOn=false;window.stopMusic();this.textContent='🎵 Música: OFF
 else{musicOn=true;window.startMusic();this.textContent='🎵 Música: ON';}});
 
 
-// Unified romantic flow
+// Unified romantic flow - each phrase once, shuffled
 (function(){
 var overlay=document.getElementById('love-overlay');
 var flow=document.createElement('div');flow.id='love-flow';
 overlay.appendChild(flow);
-var items=[
+
+var phrases=[
 'Eres mi lugar favorito. ❤️',
 'Contigo todo es bonito. ✨',
 'Me haces feliz sin intentarlo. 🥰',
 'Te quiero más de lo que digo. ❤️',
 'Eres mi casualidad favorita. 🌹',
 'Solo tú haces especial mi día. 💕',
-'Mi corazón te eligió a ti. ❤️',
-'❤️','💕','💜','💖','💗','🌹','✨','🥰'
+'Mi corazón te eligió a ti. ❤️'
 ];
+var emojis=['❤️','💕','💜','💖','💗','🌹','✨','🥰','🩷','♥️'];
+var all=phrases.concat(emojis);
+
+function shuffle(arr){var a=arr.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+var queue=shuffle(all);
+
 var colors=['#ff6ec7','#e91e63','#ff80ab','#b388ff','#f48fb1','#ce93d8','#e040fb'];
+
 function addItem(){
+if(queue.length===0)queue=shuffle(all);
+var text=queue.pop();
 var el=document.createElement('div');el.className='love-item';
-el.textContent=items[Math.floor(Math.random()*items.length)];
-var isEmoji=el.textContent.length<=2;
+el.textContent=text;
+var isEmoji=text.length<=2;
 var c=colors[Math.floor(Math.random()*colors.length)];
-el.style.color=c;el.style.fontSize=isEmoji?(20+Math.random()*20)+'px':(14+Math.random()*8)+'px';
+el.style.color=c;
+el.style.fontSize=isEmoji?(20+Math.random()*20)+'px':(13+Math.random()*6)+'px';
 el.style.textShadow='0 0 10px '+c+',0 0 25px '+c;
 el.style.left=Math.random()*85+5+'%';
 el.style.top=Math.random()*100+'%';
 el.style.animationDelay=(-Math.random()*4)+'s';
 flow.appendChild(el);
-if(flow.children.length>35)flow.removeChild(flow.firstChild);
+if(flow.children.length>30)flow.removeChild(flow.firstChild);
 }
-for(var i=0;i<30;i++)addItem();
-setInterval(addItem,2000);
+for(var i=0;i<25;i++)addItem();
+setInterval(addItem,2500);
 })();
 
 init();animate();
