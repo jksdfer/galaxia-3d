@@ -35,14 +35,13 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:15px;heigh
 @media(max-width:768px){#star-info{width:240px}.bottom-controls{flex-direction:column;align-items:flex-start}.btn{font-size:12px;padding:8px 15px}}
 
 #love-overlay{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:8;overflow:hidden}
-.love-text{position:absolute;font-size:var(--fs,22px);font-weight:bold;color:var(--c,#ff6ec7);text-shadow:0 0 10px var(--c),0 0 25px var(--c);animation:loveFloat var(--dur) linear infinite;opacity:0;white-space:nowrap;font-family:Georgia,serif}
-.love-heart{position:absolute;font-size:var(--sz,20px);text-shadow:0 0 10px #e91e63;animation:heartFloat var(--dur) linear infinite;opacity:0}
-@keyframes loveFloat{0%{transform:translateY(110vh) rotate(-5deg);opacity:0}8%{opacity:.9}92%{opacity:.9}100%{transform:translateY(-10vh) rotate(5deg);opacity:0}}
-@keyframes heartFloat{0%{transform:translateY(110vh) translateX(0) scale(.6);opacity:0}8%{opacity:.8}50%{transform:translateY(50vh) translateX(30px) scale(1)}92%{opacity:.8}100%{transform:translateY(-10vh) translateX(-20px) scale(.8);opacity:0}}
-#main-text{position:fixed;top:15%;left:50%;transform:translateX(-50%);z-index:9;pointer-events:none;text-align:center;animation:fadeInUp 2s ease forwards}
+#love-flow{position:absolute;width:100%;height:100%;animation:flowUp 25s linear infinite}
+.love-item{position:absolute;animation:sway 4s ease-in-out infinite alternate;opacity:0;font-family:Georgia,serif}
+@keyframes flowUp{0%{transform:translateY(0)}100%{transform:translateY(-100%)}}
+@keyframes sway{0%{transform:translateX(-15px) rotate(-3deg)}100%{transform:translateX(15px) rotate(3deg)}}
+#main-text{position:fixed;top:15%;left:50%;transform:translateX(-50%);z-index:9;pointer-events:none;text-align:center}
 #main-text h1{font-size:28px;color:#fff;text-shadow:0 0 20px #ff6ec7,0 0 40px #b388ff;letter-spacing:8px;animation:mainPulse 3s ease-in-out infinite;font-family:Georgia,serif}
 @keyframes mainPulse{0%,100%{opacity:.6;transform:scale(1)}50%{opacity:1;transform:scale(1.05)}}
-@keyframes fadeInUp{from{opacity:0;transform:translateX(-50%) translateY(30px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
 
 
 </style>
@@ -119,31 +118,37 @@ if(musicOn){musicOn=false;window.stopMusic();this.textContent='🎵 Música: OFF
 else{musicOn=true;window.startMusic();this.textContent='🎵 Música: ON';}});
 
 
-// Romantic floating elements - TikTok style
+// Unified romantic flow
 (function(){
 var overlay=document.getElementById('love-overlay');
-var words=['Eres mi lugar favorito.','❤️','Contigo todo es bonito.','✨','Me haces feliz sin intentarlo.','🥰','Te quiero más de lo que digo.','❤️','Eres mi casualidad favorita.','🌹','Solo tú haces especial mi día.','💕','Mi corazón te eligió a ti.','❤️'];
-var hearts=['❤️','💕','💜','💖','💗','💘','♥️','🩷','🤍'];
-var colors=['#ff6ec7','#e91e63','#ff80ab','#b388ff','#f48fb1','#ce93d8','#ff4081','#e040fb'];
-function createItem(){
-var el=document.createElement('div');
-var isHeart=Math.random()>.55;
-if(!isHeart){
-el.className='love-text';el.textContent=words[Math.floor(Math.random()*words.length)];
-el.style.setProperty('--dur',(7+Math.random()*13)+'s');
-el.style.setProperty('--fs',(16+Math.random()*18)+'px');
+var flow=document.createElement('div');flow.id='love-flow';
+overlay.appendChild(flow);
+var items=[
+'Eres mi lugar favorito. ❤️',
+'Contigo todo es bonito. ✨',
+'Me haces feliz sin intentarlo. 🥰',
+'Te quiero más de lo que digo. ❤️',
+'Eres mi casualidad favorita. 🌹',
+'Solo tú haces especial mi día. 💕',
+'Mi corazón te eligió a ti. ❤️',
+'❤️','💕','💜','💖','💗','🌹','✨','🥰'
+];
+var colors=['#ff6ec7','#e91e63','#ff80ab','#b388ff','#f48fb1','#ce93d8','#e040fb'];
+function addItem(){
+var el=document.createElement('div');el.className='love-item';
+el.textContent=items[Math.floor(Math.random()*items.length)];
+var isEmoji=el.textContent.length<=2;
 var c=colors[Math.floor(Math.random()*colors.length)];
-el.style.setProperty('--c',c);el.style.color=c;
-}else{
-el.className='love-heart';el.textContent=hearts[Math.floor(Math.random()*hearts.length)];
-el.style.setProperty('--dur',(5+Math.random()*10)+'s');
-el.style.setProperty('--sz',(16+Math.random()*22)+'px');}
-el.style.left=Math.random()*92+'%';
-el.style.animationDelay=(-Math.random()*20)+'s';
-overlay.appendChild(el);
+el.style.color=c;el.style.fontSize=isEmoji?(20+Math.random()*20)+'px':(14+Math.random()*8)+'px';
+el.style.textShadow='0 0 10px '+c+',0 0 25px '+c;
+el.style.left=Math.random()*85+5+'%';
+el.style.top=Math.random()*100+'%';
+el.style.animationDelay=(-Math.random()*4)+'s';
+flow.appendChild(el);
+if(flow.children.length>35)flow.removeChild(flow.firstChild);
 }
-for(var i=0;i<25;i++)createItem();
-setInterval(createItem,1500);
+for(var i=0;i<30;i++)addItem();
+setInterval(addItem,2000);
 })();
 
 init();animate();
